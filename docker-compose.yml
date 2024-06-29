@@ -1,0 +1,39 @@
+version: '3'
+services:
+  db:
+    image: postgres:${DB_VERSION}
+    container_name: ${DB_NAME}
+    user: root
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=postgres
+    restart: always          
+    volumes:
+        - ./postgresql:/var/lib/postgresql/data
+
+
+  odoo:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - ODDO_VERSION=${ODDO_VERSION}
+    image: ${ODOO_IMAGE}
+    user: root
+    container_name: ${ODOO_NAME}
+    ports:
+      - "${ODOO_PORT}:8069"
+    tty: true
+    command: --
+    environment:
+      - HOST=db
+      - USER=${DB_USER}
+      - PASSWORD=${DB_PASS}
+      - ADMIN_PASSWD=${ODOO_ADMIN_PASSWD}
+    volumes:
+      - ./extra-addons:/mnt/extra-addons
+      - ./conf:/etc/odoo 
+    restart: unless-stopped
+    depends_on:
+      - db
